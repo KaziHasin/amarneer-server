@@ -1,0 +1,23 @@
+// Fonts
+$font-primary: 'Roboto', sans-serif;
+$font-secondary: 'Montserrat', sans-serif;
+
+// Colors
+$primary: #4361ee;
+$secondary: #3f37c9;
+$success: #0b8e16;
+$info: #4895ef;
+$warning: #f8961e;
+$danger: #f72585;
+$light: #f8f9fa;
+$dark: #212529;
+
+// Custom variables
+$sidebar-width: 250px;
+$header-height: 60px;
+$box-shadow: 0 0.5rem 1rem rgba($dark, 0.15);
+$box-shadow-sm: 0 0.125rem 0.25rem rgba($dark, 0.075);
+$box-shadow-lg: 0 1rem 3rem rgba($dark, 0.175);
+$border-radius: 0.375rem;
+$border-radius-lg: 0.5rem;
+$transition: all 0.3s ease;
