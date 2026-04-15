@@ -4,6 +4,8 @@ namespace Modules\Properties\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Modules\Properties\Models\Property;
 
 class PropertiesController extends Controller
 {
@@ -12,7 +14,9 @@ class PropertiesController extends Controller
      */
     public function index()
     {
-        return view('properties::index');
+        return Inertia::render('Properties/Index', [
+            'properties' => Property::orderBy('created_at', 'desc')->get(),
+        ]);
     }
 
     /**
@@ -26,7 +30,9 @@ class PropertiesController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request) {}
+    public function store(Request $request)
+    {
+    }
 
     /**
      * Show the specified resource.
@@ -47,10 +53,32 @@ class PropertiesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id) {}
+    public function update(Request $request, $id)
+    {
+        $property = Property::findOrFail($id);
+
+        $data = $request->validate([
+            'name' => 'sometimes|string',
+            'slug' => 'sometimes|nullable|string',
+            'category_id' => 'sometimes|exists:categories,id',
+            'listing_type' => 'sometimes|in:rent,sale',
+            'price' => 'sometimes|numeric',
+            'area' => 'sometimes|numeric',
+            'location' => 'sometimes|string',
+            'description' => 'sometimes|nullable|string',
+            'status' => 'sometimes|in:pending,approved,rejected',
+            'is_featured' => 'sometimes|boolean',
+        ]);
+
+        $property->update($data);
+
+        return redirect()->back()->with('success', 'Property updated successfully.');
+    }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id) {}
+    public function destroy($id)
+    {
+    }
 }

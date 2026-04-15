@@ -12,15 +12,13 @@ class StoreProperty extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string',
+            'name' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'listing_type' => 'required|in:rent,sale',
             'price' => 'required|numeric',
             'area' => 'required|numeric',
-            'city' => 'required|string',
             'location' => 'required|string',
             'description' => 'nullable|string',
-
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpg,jpeg,png|max:5120',
         ];
@@ -29,8 +27,8 @@ class StoreProperty extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'Title is required.',
-            'title.string' => 'Title must be a valid text value.',
+            'name.required' => 'Name is required.',
+            'name.string' => 'Name must be a valid text value.',
 
             'category_id.required' => 'Category is required.',
             'category_id.exists' => 'Selected category is invalid.',

@@ -38,9 +38,10 @@ const roleOptions = ref([
 
 
 const getStatusVariant = (status) => {
-    if (status === 'Active') return 'success'
-    if (status === 'Inactive') return 'danger'
-    if (status === 'Pending') return 'warning'
+    const value = String(status ?? '').toLowerCase()
+    if (value === 'active') return 'success'
+    if (value === 'inactive') return 'danger'
+    if (value === 'pending') return 'warning'
     return 'secondary'
 };
 const showAddUserModal = () => {

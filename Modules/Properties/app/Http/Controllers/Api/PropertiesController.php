@@ -106,7 +106,7 @@ class PropertiesController extends Controller
 
     public function show($id): PropertyResource
     {
-        $property = Property::with(['category', 'media'])->findOrFail($id);
+        $property = Property::with(['category', 'propertyGallery'])->findOrFail($id);
 
         return new PropertyResource($property);
     }
