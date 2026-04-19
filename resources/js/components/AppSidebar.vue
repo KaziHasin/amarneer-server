@@ -15,6 +15,12 @@ const isActive = (componentName) => page.component === componentName
                 <span class="nav-text">Dashboard</span>
             </Link>
 
+            <Link :href="route('properties.index')" class="nav-link" :class="{ active: isActive('Users/Index') }">
+
+                <i class="fas fa-house"></i>
+                <span class="nav-text">Properties</span>
+            </Link>
+
             <Link :href="route('users.index')" class="nav-link" :class="{ active: isActive('Users/Index') }">
                 <i class="fas fa-users"></i>
                 <span class="nav-text">Users</span>

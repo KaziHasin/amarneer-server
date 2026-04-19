@@ -12,17 +12,25 @@ class CategoriesController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * @param Request $request
+     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = Category::query();
+
+        if ($request->filled('parent_id')) {
+            $query->where('parent_id', $request->input('parent_id'));
+        } else {
+            $query->whereNull('parent_id');
+        }
 
         if ($request->search) {
             $search = $request->search;
             $query->where('name', 'LIKE', "%{$search}%");
         }
 
-        $categories = $query->orderBy('name')->paginate(50);
+        $categories = $query->orderBy('name')->get();
 
         return CategoryResource::collection($categories);
     }

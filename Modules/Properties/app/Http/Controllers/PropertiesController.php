@@ -12,10 +12,13 @@ class PropertiesController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index() 
     {
         return Inertia::render('Properties/Index', [
-            'properties' => Property::orderBy('created_at', 'desc')->get(),
+            'properties' => Property::query()
+                ->with(['category:id,name', 'user:id,name'])
+                ->orderByDesc('created_at')
+                ->get(),
         ]);
     }
 
@@ -37,9 +40,40 @@ class PropertiesController extends Controller
     /**
      * Show the specified resource.
      */
-    public function show($id)
+    public function show(Property $property)
     {
-        return view('properties::show');
+        $property->load([
+            'category:id,name',
+            'user:id,name,email',
+            'propertyGallery' => fn ($q) => $q->orderBy('id'),
+        ]);
+
+        $gallery = $property->propertyGallery->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'type' => $item->type,
+                'url' => self::publicStorageUrl($item->file_path),
+            ];
+        })->values()->all();
+
+        return Inertia::render('Properties/Show', [
+            'property' => [
+                'id' => $property->id,
+                'name' => $property->name,
+                'slug' => $property->slug,
+                'description' => $property->description,
+                'price' => $property->price,
+                'area' => $property->area,
+                'location' => $property->location,
+                'listing_type' => $property->listing_type,
+                'status' => $property->status,
+                'is_featured' => (bool) $property->is_featured,
+                'created_at' => $property->created_at?->toIso8601String(),
+                'category' => $property->category,
+                'user' => $property->user,
+                'gallery' => $gallery,
+            ],
+        ]);
     }
 
     /**
@@ -80,5 +114,32 @@ class PropertiesController extends Controller
      */
     public function destroy($id)
     {
+    }
+
+    /**
+     * Build a browser URL for a public disk path. Uses a root-relative URL so the
+     * current host (e.g. Valet .test) is used even when APP_URL in .env differs.
+     */
+    private static function publicStorageUrl(?string $filePath): ?string
+    {
+        if ($filePath === null) {
+            return null;
+        }
+
+        $raw = trim(str_replace('\\', '/', (string) $filePath));
+        if ($raw === '') {
+            return null;
+        }
+
+        if (preg_match('#^https?://#i', $raw)) {
+            return $raw;
+        }
+
+        $path = ltrim($raw, '/');
+        if (str_starts_with($path, 'storage/')) {
+            return '/'.$path;
+        }
+
+        return '/storage/'.$path;
     }
 }

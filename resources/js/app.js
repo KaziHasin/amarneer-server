@@ -15,6 +15,8 @@ import { ZiggyVue } from 'ziggy-js'
 
 // Needed for Bootstrap JS behaviors (modal, dropdown, tooltip, etc.)
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+import 'bootstrap/dist/js/bootstrap';
+import 'bootstrap/dist/css/bootstrap.css'
 
 const pages = import.meta.glob('./Pages/**/*.vue')
 
