@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Modules\Properties\Models\Property;
+use Modules\Properties\Services\ProperiesSerialsService;
 
 class PropertiesController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index() 
+    public function index()
     {
         return Inertia::render('Properties/Index', [
             'properties' => Property::query()
@@ -22,20 +23,6 @@ class PropertiesController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('properties::create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-    }
 
     /**
      * Show the specified resource.
@@ -44,15 +31,15 @@ class PropertiesController extends Controller
     {
         $property->load([
             'category:id,name',
-            'user:id,name,email',
-            'propertyGallery' => fn ($q) => $q->orderBy('id'),
+            'user:id,name',
+            'propertyGallery' => fn($q) => $q->orderBy('id'),
         ]);
 
         $gallery = $property->propertyGallery->map(function ($item) {
             return [
                 'id' => $item->id,
                 'type' => $item->type,
-                'url' => self::publicStorageUrl($item->file_path),
+                'url' => (new ProperiesSerialsService())->getPublicPath($item->file_path),
             ];
         })->values()->all();
 
@@ -76,13 +63,6 @@ class PropertiesController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('properties::edit');
-    }
 
     /**
      * Update the specified resource in storage.
@@ -109,37 +89,5 @@ class PropertiesController extends Controller
         return redirect()->back()->with('success', 'Property updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-    }
 
-    /**
-     * Build a browser URL for a public disk path. Uses a root-relative URL so the
-     * current host (e.g. Valet .test) is used even when APP_URL in .env differs.
-     */
-    private static function publicStorageUrl(?string $filePath): ?string
-    {
-        if ($filePath === null) {
-            return null;
-        }
-
-        $raw = trim(str_replace('\\', '/', (string) $filePath));
-        if ($raw === '') {
-            return null;
-        }
-
-        if (preg_match('#^https?://#i', $raw)) {
-            return $raw;
-        }
-
-        $path = ltrim($raw, '/');
-        if (str_starts_with($path, 'storage/')) {
-            return '/'.$path;
-        }
-
-        return '/storage/'.$path;
-    }
 }

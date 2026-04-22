@@ -49,10 +49,11 @@ class Property extends Model
         $slug = $base !== '' ? $base : Str::random(8);
 
         $i = 1;
-        while (static::query()
-            ->when($ignoreId !== null, fn ($q) => $q->whereKeyNot($ignoreId))
-            ->where('slug', $slug)
-            ->exists()
+        while (
+            static::query()
+                ->when($ignoreId !== null, fn($q) => $q->whereKeyNot($ignoreId))
+                ->where('slug', $slug)
+                ->exists()
         ) {
             $i++;
             $slug = "{$base}-{$i}";

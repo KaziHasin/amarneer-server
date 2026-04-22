@@ -1,5 +1,6 @@
 {
     "Users": true,
     "Dashboard": true,
-    "Properties": true
+    "Properties": true,
+    "Plans": true
 }

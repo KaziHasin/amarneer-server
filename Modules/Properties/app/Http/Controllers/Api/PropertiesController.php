@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\Properties\Http\Requests\StoreProperty;
 use Modules\Properties\Models\Property;
 use Modules\Properties\Transformers\PropertyResource;
+use Modules\Plans\Services\UserPlanEntitlementService;
 
 class PropertiesController extends Controller
 {
@@ -147,6 +148,41 @@ class PropertiesController extends Controller
 
         return response()->json([
             'message' => 'Property deleted successfully'
+        ]);
+    }
+
+    /**
+     * Unlock property owner contact details (consumes 1 contact unlock from active plan).
+     * POST /api/v1/properties/{property}/unlock-contact
+     */
+    public function unlockContact(Request $request, Property $property, UserPlanEntitlementService $entitlements): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        if (!$property->user_id) {
+            return response()->json(['message' => 'Owner contact not available for this property.'], 422);
+        }
+
+        $property->load('user:id,name,email');
+
+        $consumed = $entitlements->consumeContactUnlock($user);
+        if (!$consumed) {
+            return response()->json([
+                'message' => 'No active plan or contact limit reached. Please buy a plan.',
+            ], 402);
+        }
+
+        return response()->json([
+            'data' => [
+                'owner' => [
+                    'id' => $property->user?->id,
+                    'name' => $property->user?->name,
+                    'email' => $property->user?->email,
+                ],
+            ],
         ]);
     }
 }
