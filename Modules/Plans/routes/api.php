@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Plans\Http\Controllers\Api\PlansController;
 use Modules\Plans\Http\Controllers\Api\StripeWebhookController;
+use Modules\Plans\Http\Controllers\Api\RazorpayWebhookController;
 
 Route::prefix('v1')->group(function () {
     Route::get('plans', [PlansController::class, 'index']);
@@ -12,5 +13,5 @@ Route::prefix('v1')->group(function () {
     });
 });
 
-// Stripe webhooks must be publicly reachable. Protect via signature verification.
 Route::post('plans/stripe/webhook', [StripeWebhookController::class, 'handle']);
+Route::post('plans/razorpay/webhook', [RazorpayWebhookController::class, 'handle']);

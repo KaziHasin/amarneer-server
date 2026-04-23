@@ -13,6 +13,8 @@ class CheckoutSessionResource extends JsonResource
             'checkout_url' => $this['checkout_url'] ?? null,
             'session_id' => $this['session_id'] ?? null,
             'payment_id' => $this['payment_id'] ?? null,
+            'order_id' => $this['order_id'] ?? null,
+            'razorpay_key' => $this['razorpay_key'] ?? null,
         ];
     }
 }
