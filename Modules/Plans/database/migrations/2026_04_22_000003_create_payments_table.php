@@ -12,9 +12,9 @@ return new class extends Migration {
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('plan_id')->nullable();
 
-            $table->string('payment_gateway'); // stripe
-            $table->string('payment_id')->nullable(); // Stripe Checkout Session ID
-            $table->string('status'); // pending, success, failed
+            $table->string('payment_gateway');
+            $table->string('payment_id')->nullable();
+            $table->string('status');
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('no action');

@@ -23,5 +23,10 @@ class Plan extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function features(): HasMany
+    {
+        return $this->hasMany(PlanFeature::class);
+    }
 }
 

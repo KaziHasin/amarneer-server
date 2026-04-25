@@ -2,30 +2,33 @@
 
 namespace App\Http\Controllers\Api;
 
+
+use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
     /**
      * Register a new user
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'first_name' => 'nullable|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'profile_path' => 'nullable|string',
-            'type' => 'nullable|string|in:customer,owner,broker',
+            'password' => 'required|string|min:8',
+            'type' => 'nullable|string|in:customer,broker',
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
-            'first_name' => $validated['first_name'] ?? null,
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'type' => $validated['type'] ?? 'customer',
@@ -42,8 +45,10 @@ class AuthController extends Controller
 
     /**
      * Login user
+     * @param   Request $request
+     * @return JsonResponse
      */
-    public function login(Request $request)
+    public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'email' => 'required|string|email',
@@ -69,8 +74,10 @@ class AuthController extends Controller
 
     /**
      * Get authenticated user profile
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function profile(Request $request)
+    public function profile(Request $request): JsonResponse
     {
         return response()->json([
             'user' => $request->user(),
@@ -79,16 +86,28 @@ class AuthController extends Controller
 
     /**
      * Update user profile
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function updateProfile(Request $request)
+    public function updateProfile(Request $request): JsonResponse
     {
         $user = $request->user();
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'first_name' => 'sometimes|nullable|string|max:255',
-            'profile_path' => 'sometimes|nullable|string',
+            'mobile' => 'sometimes|string|max:255',
+            'profile_path' => 'sometimes|nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
+
+        if ($request->hasFile('profile_path')) {
+            if ($user->profile_path && Storage::disk('public')->exists($user->profile_path)) {
+                Storage::disk('public')->delete($user->profile_path);
+            }
+
+            $path = $request->file('profile_path')->store('profiles', 'public');
+
+            $validated['profile_path'] = $path;
+        }
 
         $user->update($validated);
 
@@ -100,8 +119,10 @@ class AuthController extends Controller
 
     /**
      * Logout user
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
 

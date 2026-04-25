@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('mobile')->nullable();
             $table->string('profile_path')->nullable();
             $table->string('type')->default('customer'); // admin or customer or owner or broker
             $table->string('status')->nullable();

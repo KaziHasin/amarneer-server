@@ -15,6 +15,9 @@ class PlanResource extends JsonResource
             'price' => (int) $this->price,
             'duration_days' => (int) $this->duration_days,
             'contact_limit' => $this->contact_limit === null ? null : (int) $this->contact_limit,
+            'features' => $this->whenLoaded('features', function () {
+                return $this->features->pluck('name');
+            }),
         ];
     }
 }

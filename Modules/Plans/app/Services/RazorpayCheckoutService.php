@@ -3,8 +3,10 @@
 namespace Modules\Plans\Services;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Modules\Plans\Models\Payment;
 use Modules\Plans\Models\Plan;
+use Modules\Plans\Models\UserPlan;
 use Razorpay\Api\Api;
 
 class RazorpayCheckoutService
@@ -44,5 +46,52 @@ class RazorpayCheckoutService
             'payment' => $payment,
             'order' => $razorpayOrder,
         ];
+    }
+
+    public function verifyPayment(array $attributes): bool
+    {
+        $key = config('services.razorpay.key');
+        $secret = config('services.razorpay.secret');
+
+        $api = new Api($key, $secret);
+
+        try {
+            $api->utility->verifyPaymentSignature($attributes);
+
+            $orderId = $attributes['razorpay_order_id'];
+
+            DB::transaction(function () use ($orderId) {
+                $payment = Payment::query()
+                    ->where('payment_id', $orderId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$payment || $payment->status === Payment::STATUS_SUCCESS) {
+                    return;
+                }
+
+                $payment->update([
+                    'status' => Payment::STATUS_SUCCESS,
+                ]);
+
+                $plan = Plan::query()->find($payment->plan_id);
+                if (!$plan) {
+                    return;
+                }
+
+                UserPlan::query()->create([
+                    'user_id' => $payment->user_id,
+                    'plan_id' => $payment->plan_id,
+                    'starts_at' => now(),
+                    'expires_at' => now()->addDays($plan->duration_days),
+                    'contacts_used' => 0,
+                ]);
+            });
+
+            return true;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Razorpay signature verification failed: ' . $e->getMessage());
+            return false;
+        }
     }
 }

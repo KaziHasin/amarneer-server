@@ -16,6 +16,7 @@ class PlansController extends Controller
     public function index(): AnonymousResourceCollection
     {
         $plans = Plan::query()
+            ->with('features')
             ->orderBy('price')
             ->get(['id', 'name', 'price', 'duration_days', 'contact_limit']);
 
@@ -59,6 +60,27 @@ class PlansController extends Controller
         }
 
         abort(400, 'Invalid payment gateway.');
+    }
+
+    public function verifyRazorpay(Request $request, RazorpayCheckoutService $razorpay)
+    {
+        $request->validate([
+            'razorpay_order_id' => 'required|string',
+            'razorpay_payment_id' => 'required|string',
+            'razorpay_signature' => 'required|string',
+        ]);
+
+        $success = $razorpay->verifyPayment($request->only([
+            'razorpay_order_id',
+            'razorpay_payment_id',
+            'razorpay_signature'
+        ]));
+
+        if ($success) {
+            return response()->json(['message' => 'Payment verified successfully']);
+        }
+
+        return response()->json(['message' => 'Payment verification failed'], 400);
     }
 }
 
