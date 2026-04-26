@@ -11,6 +11,6 @@ class PropertiesDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([CategoriesSeeder::class]);
+        $this->call([CategoriesSeeder::class, AmenitiesSeeder::class]);
     }
 }

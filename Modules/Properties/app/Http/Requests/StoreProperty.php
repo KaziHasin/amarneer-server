@@ -19,7 +19,9 @@ class StoreProperty extends FormRequest
             'area' => 'required|numeric',
             'location' => 'required|string',
             'description' => 'nullable|string',
-            'images' => 'nullable|array',
+            'amenities' => 'nullable|array',
+            'amenities.*' => 'exists:amenities,id',
+            'images' => 'required|array',
             'images.*' => 'image|mimes:jpg,jpeg,png|max:5120',
         ];
     }

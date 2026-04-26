@@ -75,6 +75,10 @@ class PropertiesController extends Controller
 
             $property = Property::create($data);
 
+            if ($request->has('amenities')) {
+                $property->amenities()->sync($request->amenities);
+            }
+
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
 
