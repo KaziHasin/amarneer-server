@@ -35,15 +35,21 @@ class PropertiesController extends Controller
             $search = $request->search;
 
             $query->where(function ($q) use ($search) {
-                $q->where('title', 'LIKE', "%{$search}%")
-                    ->orWhere('location', 'LIKE', "%{$search}%")
-                    ->orWhere('area', 'LIKE', "%{$search}%");
+                $searchTerm = '%' . strtolower($search) . '%';
+                $q->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
+                    ->orWhereRaw('LOWER(location) LIKE ?', [$searchTerm])
+                    ->orWhereRaw('LOWER(area) LIKE ?', [$searchTerm]);
             });
         }
 
         // Category
         if ($request->category_id) {
-            $query->where('category_id', $request->category_id);
+            $query->where(function ($q) use ($request) {
+                $q->where('category_id', $request->category_id)
+                    ->orWhereIn('category_id', function ($sub) use ($request) {
+                        $sub->select('id')->from('categories')->where('parent_id', $request->category_id);
+                    });
+            });
         }
 
         // Price range
@@ -58,6 +64,34 @@ class PropertiesController extends Controller
         $properties = $query->latest()->paginate(10);
 
         return PropertyResource::collection($properties);
+    }
+
+    /** 
+     * Get max price of properties
+     * GET /api/properties/max-price
+     * @return  JsonResponse
+     */
+    public function getMaxPrice(): JsonResponse
+    {
+        $maxPrice = Property::max('price') ?? 0;
+        return response()->json(['data' => ['max_price' => $maxPrice]]);
+    }
+
+    /** 
+     * Get properties stats
+     * GET /api/properties/stats
+     * @return  JsonResponse
+     */
+    public function getStats(): JsonResponse
+    {
+        $totalProperties = Property::where('status', 'approved')->count();
+        $totalAreas = Property::where('status', 'approved')->distinct('location')->count('location');
+        return response()->json([
+            'data' => [
+                'total_properties' => $totalProperties,
+                'total_areas' => $totalAreas,
+            ]
+        ]);
     }
 
     /** 
@@ -109,9 +143,12 @@ class PropertiesController extends Controller
      * @return  PropertyResource
      */
 
-    public function show($id): PropertyResource
+    public function show($identifier): PropertyResource
     {
-        $property = Property::with(['category', 'propertyGallery'])->findOrFail($id);
+        $property = Property::with(['category', 'propertyGallery', 'amenities'])
+            ->where('slug', $identifier)
+            ->orWhere('id', $identifier)
+            ->firstOrFail();
 
         return new PropertyResource($property);
     }

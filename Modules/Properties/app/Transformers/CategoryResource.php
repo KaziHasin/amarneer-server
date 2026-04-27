@@ -13,6 +13,7 @@ class CategoryResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'parent_id' => $this->parent_id,
+            'count' => $this->properties_count ?? 0,
         ];
     }
 }

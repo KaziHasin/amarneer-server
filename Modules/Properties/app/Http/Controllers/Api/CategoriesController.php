@@ -17,9 +17,12 @@ class CategoriesController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Category::query();
+        $query = Category::query()->select('categories.*')
+            ->selectRaw('(SELECT COUNT(*) FROM properties WHERE properties.status = ? AND (properties.category_id = categories.id OR properties.category_id IN (SELECT id FROM categories AS c2 WHERE c2.parent_id = categories.id))) as properties_count', ['approved']);
 
-        if ($request->filled('parent_id')) {
+        if ($request->filled('type') && $request->input('type') === 'child') {
+            $query->whereNotNull('parent_id');
+        } elseif ($request->filled('parent_id')) {
             $query->where('parent_id', $request->input('parent_id'));
         } else {
             $query->whereNull('parent_id');

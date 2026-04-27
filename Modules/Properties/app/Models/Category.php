@@ -13,6 +13,9 @@ class Category extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = ['name', 'parent_id'];
-
-
+    
+    public function properties()
+    {
+        return $this->hasMany(Property::class);
+    }
 }
