@@ -31,6 +31,14 @@ class PropertyResource extends JsonResource
                 ];
             }),
 
+            'amenities' => $this->amenities->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'icon' => $item->icon,
+                ];
+            }),
+
             'created_at' => $this->created_at,
         ];
     }

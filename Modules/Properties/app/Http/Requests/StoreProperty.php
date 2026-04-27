@@ -21,7 +21,7 @@ class StoreProperty extends FormRequest
             'description' => 'nullable|string',
             'amenities' => 'nullable|array',
             'amenities.*' => 'exists:amenities,id',
-            'images' => 'required|array',
+            'images' => 'required|array|max:3',
             'images.*' => 'image|mimes:jpg,jpeg,png|max:5120',
         ];
     }
