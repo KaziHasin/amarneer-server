@@ -8,9 +8,15 @@ use Modules\Properties\Models\Amenity;
 
 class AmenitiesController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $amenities = Amenity::orderBy('name')->get();
+        $query = Amenity::query();
+
+        if ($request->has('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        $amenities = $query->orderBy('name')->get();
 
         return response()->json([
             'data' => $amenities

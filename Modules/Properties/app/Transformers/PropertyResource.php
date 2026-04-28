@@ -25,6 +25,12 @@ class PropertyResource extends JsonResource
                 'name' => $this->category?->name,
             ],
 
+            'owner' => [
+                'name' => $this->user?->name,
+                'phone' => $this->user?->mobile,
+                'email' => $this->user?->email,
+            ],
+
             'media' => $this->propertyGallery->map(function ($item) {
                 return [
                     'type' => $item->type,
