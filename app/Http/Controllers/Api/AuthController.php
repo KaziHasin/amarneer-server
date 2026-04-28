@@ -130,4 +130,30 @@ class AuthController extends Controller
             'message' => 'Logged out successfully',
         ]);
     }
+
+    /**
+     * Lookup user by phone
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function lookupUser(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'phone' => 'required|string|min:6',
+        ]);
+
+        $user = User::where('mobile', $validated['phone'])->first();
+
+        if ($user) {
+            return response()->json([
+                'user' => [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->mobile,
+                ]
+            ]);
+        }
+
+        return response()->json(['user' => null]);
+    }
 }

@@ -23,6 +23,9 @@ class StoreProperty extends FormRequest
             'amenities.*' => 'exists:amenities,id',
             'images' => 'required|array|max:3',
             'images.*' => 'image|mimes:jpg,jpeg,png|max:5120',
+            'owner_name' => 'required|string',
+            'owner_phone' => 'required|string',
+            'owner_email' => 'nullable|email',
         ];
     }
 

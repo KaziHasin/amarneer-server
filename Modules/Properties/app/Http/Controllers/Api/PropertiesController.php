@@ -10,8 +10,10 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Modules\Properties\Http\Requests\StoreProperty;
 use Modules\Properties\Models\Property;
+use Modules\Properties\Services\ProperiesSerialsService;
 use Modules\Properties\Transformers\PropertyResource;
 use Modules\Plans\Services\UserPlanEntitlementService;
+
 
 class PropertiesController extends Controller
 {
@@ -107,7 +109,18 @@ class PropertiesController extends Controller
             $data = $request->validated();
             $data['status'] = 'pending';
 
-            $property = Property::create($data);
+            $ownerData = [
+                'name' => $data['owner_name'],
+                'email' => $data['owner_email'] ?? null,
+                'mobile' => $data['owner_phone'],
+            ];
+
+            $owner = (new ProperiesSerialsService())->createOrUpdatePropertyOwner($ownerData);
+
+            $propertyData = collect($data)->except(['owner_name', 'owner_phone', 'owner_email'])->toArray();
+            $propertyData['user_id'] = $owner->id;
+
+            $property = Property::create($propertyData);
 
             if ($request->has('amenities')) {
                 $property->amenities()->sync($request->amenities);
