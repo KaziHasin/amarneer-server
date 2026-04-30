@@ -10,7 +10,9 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('plans/{plan}/checkout', [PlansController::class, 'checkout']);
         Route::post('plans/razorpay/verify', [PlansController::class, 'verifyRazorpay']);
+        Route::get('user/plan', [PlansController::class, 'userPlanStatus']);
     });
 });
 
 Route::post('plans/stripe/webhook', [StripeWebhookController::class, 'handle']);
+

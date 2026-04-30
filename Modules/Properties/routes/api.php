@@ -11,4 +11,8 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('properties', PropertiesController::class);
     Route::get('categories', [CategoriesController::class, 'index']);
     Route::get('amenities', [AmenitiesController::class, 'index']);
+
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::post('properties/{property}/unlock-contact', [PropertiesController::class, 'unlockContact']);
+    });
 });

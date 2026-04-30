@@ -212,30 +212,33 @@ class PropertiesController extends Controller
     public function unlockContact(Request $request, Property $property, UserPlanEntitlementService $entitlements): JsonResponse
     {
         $user = $request->user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthenticated.'], 401);
-        }
 
         if (!$property->user_id) {
             return response()->json(['message' => 'Owner contact not available for this property.'], 422);
         }
 
-        $property->load('user:id,name,email');
-
         $consumed = $entitlements->consumeContactUnlock($user);
         if (!$consumed) {
             return response()->json([
-                'message' => 'No active plan or contact limit reached. Please buy a plan.',
+                'message' => 'No active plan or contact limit reached. Please subscribe to a plan.',
+                'code'    => 'plan_required',
             ], 402);
         }
+
+        $property->load('user:id,name,email,mobile');
+
+        $activePlan = $entitlements->getActiveUserPlan($user);
 
         return response()->json([
             'data' => [
                 'owner' => [
-                    'id' => $property->user?->id,
-                    'name' => $property->user?->name,
-                    'email' => $property->user?->email,
+                    'name'   => $property->user?->name,
+                    'email'  => $property->user?->email,
+                    'mobile' => $property->user?->mobile,
                 ],
+                'contacts_remaining' => $activePlan?->plan?->contact_limit === null
+                    ? null
+                    : max(0, ($activePlan->plan->contact_limit - $activePlan->contacts_used)),
             ],
         ]);
     }
