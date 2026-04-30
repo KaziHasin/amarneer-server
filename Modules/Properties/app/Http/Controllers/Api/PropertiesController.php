@@ -27,12 +27,10 @@ class PropertiesController extends Controller
         $query = Property::with(['category', 'propertyGallery'])
             ->where('status', 'approved');
 
-        // Featured
         if ($request->featured) {
             $query->where('is_featured', true);
         }
 
-        // Search
         if ($request->search) {
             $search = $request->search;
 
@@ -44,7 +42,6 @@ class PropertiesController extends Controller
             });
         }
 
-        // Category
         if ($request->category_id) {
             $query->where(function ($q) use ($request) {
                 $q->where('category_id', $request->category_id)
@@ -54,7 +51,10 @@ class PropertiesController extends Controller
             });
         }
 
-        // Price range
+        if ($request->listing_type) {
+            $query->where('listing_type', $request->listing_type);
+        }
+
         if ($request->min_price) {
             $query->where('price', '>=', $request->min_price);
         }
@@ -207,6 +207,8 @@ class PropertiesController extends Controller
 
     /**
      * Unlock property owner contact details (consumes 1 contact unlock from active plan).
+     * Idempotent: if the user already unlocked this property under the current plan,
+     * the contact is returned without consuming an additional credit.
      * POST /api/v1/properties/{property}/unlock-contact
      */
     public function unlockContact(Request $request, Property $property, UserPlanEntitlementService $entitlements): JsonResponse
@@ -217,11 +219,12 @@ class PropertiesController extends Controller
             return response()->json(['message' => 'Owner contact not available for this property.'], 422);
         }
 
-        $consumed = $entitlements->consumeContactUnlock($user);
-        if (!$consumed) {
+        $result = $entitlements->consumeContactUnlock($user, $property->id);
+
+        if (!$result['consumed']) {
             return response()->json([
                 'message' => 'No active plan or contact limit reached. Please subscribe to a plan.',
-                'code'    => 'plan_required',
+                'code' => 'plan_required',
             ], 402);
         }
 
@@ -232,8 +235,42 @@ class PropertiesController extends Controller
         return response()->json([
             'data' => [
                 'owner' => [
-                    'name'   => $property->user?->name,
-                    'email'  => $property->user?->email,
+                    'name' => $property->user?->name,
+                    'email' => $property->user?->email,
+                    'mobile' => $property->user?->mobile,
+                ],
+                'contacts_remaining' => $activePlan?->plan?->contact_limit === null
+                    ? null
+                    : max(0, ($activePlan->plan->contact_limit - $activePlan->contacts_used)),
+                'already_unlocked' => $result['already_unlocked'],
+            ],
+        ]);
+    }
+
+    /**
+     * Check if the authenticated user has already unlocked this property's contact
+     * under their current active plan. Returns the owner contact if already unlocked.
+     * GET /api/v1/properties/{property}/unlock-status
+     */
+    public function unlockStatus(Request $request, Property $property, UserPlanEntitlementService $entitlements): JsonResponse
+    {
+        $user = $request->user();
+
+        $alreadyUnlocked = $entitlements->hasAlreadyUnlockedProperty($user, $property->id);
+
+        if (!$alreadyUnlocked) {
+            return response()->json(['data' => ['unlocked' => false]]);
+        }
+
+        $property->load('user:id,name,email,mobile');
+        $activePlan = $entitlements->getActiveUserPlan($user);
+
+        return response()->json([
+            'data' => [
+                'unlocked' => true,
+                'owner' => [
+                    'name' => $property->user?->name,
+                    'email' => $property->user?->email,
                     'mobile' => $property->user?->mobile,
                 ],
                 'contacts_remaining' => $activePlan?->plan?->contact_limit === null

@@ -13,6 +13,7 @@ Route::prefix('v1')->group(function () {
     Route::get('amenities', [AmenitiesController::class, 'index']);
 
     Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('properties/{property}/unlock-status',  [PropertiesController::class, 'unlockStatus']);
         Route::post('properties/{property}/unlock-contact', [PropertiesController::class, 'unlockContact']);
     });
 });
